@@ -1,0 +1,11 @@
+*.class
+*.jar
+*.war
+*.pdf
+*~
+.metadata/.plugins/*
+/bin/
+.idea/*
+target
+project/target
+.iml
