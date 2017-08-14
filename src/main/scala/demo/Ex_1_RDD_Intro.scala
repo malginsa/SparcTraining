@@ -1,6 +1,7 @@
 package demo
 
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.util.LongAccumulator
 
 object Ex_1_RDD_Intro {
 
@@ -25,8 +26,6 @@ object Ex_1_RDD_Intro {
 // val array = 1 to 10 toArray
 // val ints = sc.parallelize(array.reverse, 3) // RDD
 // ints.saveAsTextFile(workingFolder + "ints")
-// val programmersProfiles = sc.parallelize(Seq(("Ivan", "Java"), ("Elena", "Scala"), ("Paetja", "Scala")))
-// programmersProfiles.saveAsSequenceFile(workingFolder + "programmersProfiles")
 
     // reading RDD
     val cachedInts = sc.textFile(workingFolder + "ints")
@@ -79,6 +78,9 @@ object Ex_1_RDD_Intro {
     println("groupping by name ")
     codeRows.groupByKey.collect.foreach(println)
 
+    val programmersProfiles = sc.parallelize(Seq(("Ivan", "Java"), ("Elena", "Scala"), ("Paetja", "Scala")))
+    // programmersProfiles.saveAsSequenceFile(workingFolder + "programmersProfiles")
+
     println("Statistics of languages")
     sc.sequenceFile(workingFolder + "programmersProfiles",
         classOf[org.apache.hadoop.io.Text], // ключ был типа текст(хадуповский)
@@ -87,6 +89,44 @@ object Ex_1_RDD_Intro {
       .join(codeRows)
       .collect
       .foreach(println)
+
+    programmersProfiles.cogroup(codeRows).sortByKey(false).collect.foreach(println)
+
+    val anomalInts = sc.parallelize(Seq(1,1,1,1,1,2,2,2,2,3,3,150,1,13,3,3,-100,3,3,3,3,1,1,1))
+    val stats = anomalInts.stats()
+    val stdev = stats.stdev
+    val mean = stats.mean
+    print("Stdev = " + stdev + "  Mean = " + mean)
+
+    val normalInts = anomalInts.filter(x => (math.abs(x-mean) < 3*stdev))
+    normalInts.collect.foreach(println)
+
+    val config = sc.broadcast(("order" -> 3, "filter" -> true)) // стала глобальной переменной
+    println(config.value)
+
+    val accum = sc.accumulator(0)
+    val ints = sc.textFile(workingFolder + "ints")
+    ints.cache()
+    ints.foreach(x => accum.add(x.toInt))
+    println(ints.toDebugString)
+    println(accum.value)
+
+    // аккумуляторы как правило тольдля отладки и тестирования
+    val accumV2 = new LongAccumulator()
+    sc.register(accumV2) // регистрация аккумулятора в спарк-контексте
+    ints.foreach(x => accumV2.add(x.toLong))
+    if (!accumV2.isZero) {
+      println(accumV2.sum)
+      println(accumV2.avg)
+      println(accumV2.value)
+      println(accumV2.count)
+    }
+
+    val accumV2copy = accumV2.copy()
+    sc.register(accumV2copy)
+    ints.take(5).foreach(x => accumV2copy.add(x.toLong))
+    accumV2.merge(accumV2copy)
+    println("Merged value " + accumV2copy.value)
 
   }
 }
