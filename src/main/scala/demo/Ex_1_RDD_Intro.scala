@@ -6,7 +6,7 @@ object Ex_1_RDD_Intro {
 
   def main(args: Array[String]): Unit = {
 
-    val workingFolder = "c:/Users/Sergei_Malgin/dev/SparcTraining/out/"
+    val workingFolder = "/home/msa/dev/SparcTraining/out/"
     System.setProperty("hadoop.home.dir", "d:\\hadoop_home_dir");
 
     val spark = SparkSession.builder
@@ -21,11 +21,12 @@ object Ex_1_RDD_Intro {
     println(ds.count) // 1000
     println(ds.rdd.count) //1000
 
-    val array = 1 to 10 toArray
-    val ints = sc.parallelize(array.reverse, 3) // RDD
-
     // storing RDD as a "file"
-//    ints.saveAsTextFile("c:/Users/Sergei_Malgin/dev/SparcTraining/out/ints")
+// val array = 1 to 10 toArray
+// val ints = sc.parallelize(array.reverse, 3) // RDD
+// ints.saveAsTextFile(workingFolder + "ints")
+// val programmersProfiles = sc.parallelize(Seq(("Ivan", "Java"), ("Elena", "Scala"), ("Paetja", "Scala")))
+// programmersProfiles.saveAsSequenceFile(workingFolder + "programmersProfiles")
 
     // reading RDD
     val cachedInts = sc.textFile(workingFolder + "ints")
@@ -78,9 +79,6 @@ object Ex_1_RDD_Intro {
     println("groupping by name ")
     codeRows.groupByKey.collect.foreach(println)
 
-//    val programmersProfiles
-//    programmersProfiles = sc.parallelize(Seq(("Ivan", "Java"), ("Elena", "Scala"), ("Paetja", "Scala")))
-//    programmersProfiles.saveAsSequenceFile(workingFolder + "programmersProfiles")
     println("Statistics of languages")
     sc.sequenceFile(workingFolder + "programmersProfiles",
         classOf[org.apache.hadoop.io.Text], // ключ был типа текст(хадуповский)
